@@ -1,0 +1,4 @@
+name: gbtemplate-HTML-and-TeX-knitR
+description: >
+   A template to knit a report to PDF with LaTeX source which includes tikz figures and to HTML with PNG using bookdown
+create_dir: TRUE

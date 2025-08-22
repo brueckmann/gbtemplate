@@ -1,0 +1,244 @@
+---
+title: "gbtemplate-HTML-and-TeX-knitR Title"
+author: "Your Name"
+date: "Last compiled on `r format(Sys.time(), '%d %B, %Y')`."
+
+params:
+  show_code: false
+  debug_mode: true
+  generate_plots: true
+  include_preperation: false
+
+output:
+  bookdown::html_document2: 
+    number_sections: false
+  bookdown::pdf_document2:
+    latex_engine: pdflatex
+    toc: false
+    keep_tex: true
+    includes:
+        in_header: tikz_header.tex
+---
+
+```{r globaldefaultchunkoptions, message=FALSE, warning=FALSE, include=FALSE}
+knitr::opts_chunk$set(echo = params$show_code)
+knitr::opts_chunk$set(message = params$debug_mode)
+knitr::opts_chunk$set(warning = params$debug_mode)
+```
+
+```{r setupfordifferntpictures, include=FALSE}
+# Set CRAN mirror to avoid prompts
+options(repos = c(CRAN = "https://cran.rstudio.com/"))
+
+# Load required libraries
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(rmarkdown)
+  library(knitr)
+  library(bookdown)
+
+# Only load tikzDevice for PDF output
+  if (knitr::is_latex_output()) {
+    library(tikzDevice)
+  }
+})
+
+# Function to detect output format and set appropriate graphics device
+setup_graphics_device <- function() {
+  # Get the current output format
+  output_format <- knitr::opts_knit$get("rmarkdown.pandoc.to")
+  
+  if (is.null(output_format)) {
+    # Fallback detection method
+    if (knitr::is_latex_output()) {
+      output_format <- "latex"
+    } else if (knitr::is_html_output()) {
+      output_format <- "html"
+    } else {
+      output_format <- "other"
+    }
+  }
+  
+  cat("Detected output format:", output_format, "\n")
+  
+  if (knitr::is_latex_output()) {
+    # Configure for PDF/LaTeX output with TikZ
+    cat("Setting up TikZ device for PDF output\n")
+    
+    # Configure tikzDevice options
+    setTikzDefaults(overwrite = TRUE)
+    options(tikzDocumentDeclaration = "\\documentclass[12pt]{article}")
+    # Set chunk options for TikZ
+    knitr::opts_chunk$set(
+      echo = TRUE,
+      fig.width = 6,
+      fig.height = 4,
+      dev = 'tikz',
+      dev.args = list(
+        pointsize = 12      ),
+      fig.pos = 'H',
+      cache = FALSE,
+      warning = FALSE,
+      message = FALSE,
+      dpi = 300
+    )
+    
+# Create tikz header file
+    tikz_header_content <- "
+\\usepackage[utf8]{inputenc}
+\\usepackage[T1]{fontenc}
+\\usepackage{mathptmx}
+\\usepackage{tikz}
+\\usepackage{xcolor}
+\\usepackage{pgfplots}
+\\pgfplotsset{compat=1.17}
+\\usepackage{amsmath,amsfonts,amssymb}
+\\usepackage{float}
+\\usetikzlibrary{calc,patterns,decorations.pathmorphing,decorations.markings}
+"
+    
+    if (!file.exists("tikz_header.tex")) {
+      writeLines(tikz_header_content, "tikz_header.tex")
+    }
+    
+    # Test tikzDevice setup
+    tryCatch({
+      tikzTest()
+      cat("TikZ device test successful!\n")
+    }, error = function(e) {
+      cat("TikZ device test failed:", e$message, "\n")
+      cat("Falling back to PNG for PDF output\n")
+      
+      # Fallback to PNG for PDF
+      knitr::opts_chunk$set(
+        dev = 'png',
+        dev.args = list(type = "cairo-png"),
+        dpi = 300
+      )
+    })
+    
+  } else {
+    # Configure for HTML/Word/other formats with PNG
+    cat("Setting up PNG device for", output_format, "output\n")
+    
+    knitr::opts_chunk$set(
+      echo = TRUE,
+      fig.width = 8,
+      fig.height = 5,
+      dev = 'png',
+      dev.args = list(type = "cairo-png"),
+      dpi = 300,
+      cache = FALSE,
+      warning = FALSE,
+      message = FALSE,
+      fig.retina = 2  # For high-DPI displays in HTML
+    )
+  }
+  
+  # Ensure figure directory exists
+  if (!dir.exists("figure")) {
+    dir.create("figure")
+  }
+  
+  return(invisible(output_format))
+}
+
+# Function to create LaTeX math expressions that work in both HTML and tikz formats
+math_expr <- function(latex_expr, html_expr = NULL) {
+  if (knitr::is_latex_output()) {
+    return(latex_expr)
+  } else {
+    # For HTML output, return plain text or HTML math if provided
+    if (is.null(html_expr)) {
+      # Strip LaTeX formatting for plain text fallback
+      plain_text <- gsub("\\$|\\\\", "", latex_expr)
+      plain_text <- gsub("\\{|\\}", "", plain_text)
+      return(plain_text)
+    } else {
+      return(html_expr)
+    }
+  }
+}
+
+# Initialize graphics device
+current_format <- setup_graphics_device()
+```
+
+
+
+
+
+
+```{r loaddata, include=FALSE}
+# getwd()
+
+# load( "../input_data/data_labelled_final.Rdata") 
+
+```
+
+```{asis preparation_text_1, echo=params$include_preperation}
+# Data Prep
+
+Some text you write on the data preparation
+```
+
+
+
+```{asis preparation_text_2, echo=params$include_preperation}
+More text you write on the data preparation
+```
+
+```{r preparation_code, echo = params$show_code}
+# some data wrangling
+
+mtcars$hp= mtcars$hp/2
+```
+
+
+
+```{r specificsetup,  echo = params$show_code}
+# this is a space to set up what is needed for this project
+# here is an example
+## devtools::install_github("yhoriuchi/projoint") 
+# library(projoint)
+# for this template:
+library(modelsummary)
+```
+
+# Analysis 
+
+Make sure to use only one Hashtag, so it looks like a real heading and knits to section in LaTeX. 
+
+## First subanalysis
+
+Let's refer to the table below, with Table \@ref(tab:test).
+
+
+
+```{r testregression, echo = params$show_code}
+
+mod <- lm(hp ~ mpg, mtcars)
+
+modelsummary(mod,
+  estimate = "estimate",
+  statistic = c("std.error", "p.value"),
+  gof_map = c("aic"),
+title = '(#tab:test) This title describes the content of this modelsummarytable.'
+)
+
+# Source: https://github.com/vincentarelbundock/modelsummary/blob/main/examples/cross_references.Rmd
+```
+
+And see the Figure \@ref(fig:mpghp).
+
+```{r mpghp, fig.cap="Plot showing hp and mpg", include=params$generate_plots, echo = params$show_code}
+
+# Create the scatter plot
+ggplot(data = mtcars, aes(x = hp, y = mpg)) +
+  geom_point() +                          # Adds points to the plot
+  labs(title = "Horsepower vs. Miles Per Gallon",  # Title of the plot
+       x = "Horsepower (hp)",              # Label for x-axis
+       y = "Miles Per Gallon (mpg)") +     # Label for y-axis
+  theme_minimal()                         # Use a theme
+
+```
