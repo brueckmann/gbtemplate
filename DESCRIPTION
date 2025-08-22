@@ -1,0 +1,15 @@
+Package: gbtemplate
+Type: Package
+Title: Rmarkdown template to knit to HTML and PDF using tikz for the images.
+Version: 0.0.1
+Authors@R: c(
+    person(
+      "G.", "Brückmann",
+      email = "g.brueckmann@gmx.net",
+      role = c("aut", "cre")
+    )
+  )
+Description: Rmarkdown template to knit to HTML_document2 and PDF_document2 via bookdown to create from the same Rmarkdown file a PDF with the TeX files included using tikz for the PDF and automatically using pngs when knitting to HTML.
+License: CC BY-NC-SA 4.0
+Encoding: UTF-8
+LazyData: true
